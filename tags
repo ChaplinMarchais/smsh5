@@ -1,0 +1,66 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+DFL_PROMPT	smsh5.c	20;"	d	file:
+FAIL	controlflow.c	/^enum results  { SUCCESS, FAIL };$/;"	e	enum:results	file:
+MAXVARS	varlib.c	34;"	d	file:
+NEUTRAL	controlflow.c	/^enum states   { NEUTRAL, WANT_THEN, THEN_BLOCK };$/;"	e	enum:states	file:
+SUCCESS	controlflow.c	/^enum results  { SUCCESS, FAIL };$/;"	e	enum:results	file:
+THEN_BLOCK	controlflow.c	/^enum states   { NEUTRAL, WANT_THEN, THEN_BLOCK };$/;"	e	enum:states	file:
+VLenviron2table	varlib.c	/^int VLenviron2table(char *env[])$/;"	f
+VLexport	varlib.c	/^int VLexport( char *name )$/;"	f
+VLinit	varlib.c	/^void VLinit()$/;"	f
+VLlist	varlib.c	/^void VLlist()$/;"	f
+VLlookup	varlib.c	/^char * VLlookup( char *name )$/;"	f
+VLstore	varlib.c	/^int VLstore( char *name, char *val )$/;"	f
+VLtable2environ	varlib.c	/^char ** VLtable2environ()$/;"	f
+WANT_THEN	controlflow.c	/^enum states   { NEUTRAL, WANT_THEN, THEN_BLOCK };$/;"	e	enum:states	file:
+assign	builtin.c	/^int assign(char *str)$/;"	f
+do_command	process.c	/^int do_command(char **args)$/;"	f
+do_control_command	controlflow.c	/^int do_control_command(char **args)$/;"	f
+emalloc	splitline2.c	/^void *emalloc(size_t n)$/;"	f
+erealloc	splitline2.c	/^void *erealloc(void *p, size_t n)$/;"	f
+execute	process.c	/^int execute(char *argv[])$/;"	f
+fatal	smsh5.c	/^void fatal(char *s1, char *s2, int n)$/;"	f
+find_item	varlib.c	/^static struct var * find_item( char *name , int first_blank )$/;"	f	file:
+fl_append	flexstr2.c	/^fl_append(FLEXLIST *p, char *str)$/;"	f
+fl_free	flexstr2.c	/^fl_free(FLEXLIST *p)$/;"	f
+fl_freelist	flexstr2.c	/^fl_freelist( char **lst_of_ptrs )$/;"	f
+fl_getcount	flexstr2.c	/^fl_getcount(FLEXLIST *p)$/;"	f
+fl_getlist	flexstr2.c	/^fl_getlist(FLEXLIST *p)$/;"	f
+fl_init	flexstr2.c	/^fl_init(FLEXLIST *p, int amt)$/;"	f
+freelist	splitline2.c	/^freelist(char **list)$/;"	f
+fs_addch	flexstr2.c	/^fs_addch(FLEXSTR *p, char c)$/;"	f
+fs_addstr	flexstr2.c	/^fs_addstr(FLEXSTR *p, char *s)$/;"	f
+fs_free	flexstr2.c	/^fs_free(FLEXSTR *p)$/;"	f
+fs_getstr	flexstr2.c	/^fs_getstr(FLEXSTR *p)$/;"	f
+fs_init	flexstr2.c	/^fs_init(FLEXSTR *p, int amt)$/;"	f
+if_result	controlflow.c	/^static int if_result = SUCCESS;$/;"	v	file:
+if_state	controlflow.c	/^static int if_state  = NEUTRAL;$/;"	v	file:
+is_assign_var	builtin.c	/^int is_assign_var(char *cmd, int *resultp)$/;"	f
+is_builtin	builtin.c	/^int is_builtin(char **args, int *resultp)$/;"	f
+is_control_command	controlflow.c	/^int is_control_command(char *s)$/;"	f
+is_delim	splitline2.c	49;"	d	file:
+is_env	varlib.c	/^		int  is_env;		\/* a boolean		*\/$/;"	m	struct:var	file:
+is_export	builtin.c	/^int is_export(char **args, int *resultp)$/;"	f
+is_list_vars	builtin.c	/^int is_list_vars(char *cmd, int *resultp)$/;"	f
+last_stat	controlflow.c	/^static int last_stat = 0;$/;"	v	file:
+main	smsh5.c	/^int main()$/;"	f
+new_string	varlib.c	/^char * new_string( char *name, char *val )$/;"	f
+newstr	splitline2.c	/^char *newstr(char *s, int l)$/;"	f
+next_cmd	splitline2.c	/^char * next_cmd(char *prompt, FILE *fp)$/;"	f
+ok_to_execute	controlflow.c	/^int ok_to_execute()$/;"	f
+okname	builtin.c	/^int okname(char *str)$/;"	f
+process	process.c	/^int process(char *args[])$/;"	f
+results	controlflow.c	/^enum results  { SUCCESS, FAIL };$/;"	g	file:
+setup	smsh5.c	/^void setup()$/;"	f
+splitline	splitline2.c	/^char ** splitline(char *line)$/;"	f
+states	controlflow.c	/^enum states   { NEUTRAL, WANT_THEN, THEN_BLOCK };$/;"	g	file:
+str	varlib.c	/^		char *str;		\/* name=val string	*\/$/;"	m	struct:var	file:
+syn_err	controlflow.c	/^int syn_err(char *msg)$/;"	f
+tab	varlib.c	/^static struct var tab[MAXVARS];			\/* the table	*\/$/;"	v	typeref:struct:var	file:
+var	varlib.c	/^struct var {$/;"	s	file:
+varsub	builtin.c	/^void varsub(char **args)$/;"	f

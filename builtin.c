@@ -28,6 +28,7 @@ int is_builtin(char **args, int *resultp)
 		return 1;
 	return 0;
 }
+
 /* checks if a legal assignment cmd
  * if so, does it and retns 1
  * else return 0
@@ -41,6 +42,7 @@ int is_assign_var(char *cmd, int *resultp)
 	}
 	return 0;
 }
+
 /* checks if command is "set" : if so list vars */
 int is_list_vars(char *cmd, int *resultp)
 {
@@ -83,12 +85,13 @@ int is_export(char **args, int *resultp)
 	return 0;
 }
 
-int assign(char *str)
 /*
  * purpose: execute name=val AND ensure that name is legal
  * returns: -1 for illegal lval, or result of VLstore 
  * warning: modifies the string, but retores it to normal
  */
+int assign(char *str)
+
 {
 	char	*cp;
 	int	rv ;
@@ -115,13 +118,13 @@ int cd(char **args)
 	return chdir(args[1]);
 }
 
-int okname(char *str)
 /*
  * purpose: determines if a string is a legal variable name
  * returns: 0 for no, 1 for yes
  * rule: valid is any alpha or _ followed by any string of alnum or _
  *   eg: _xy234  or x__3  z
  */
+int okname(char *str)
 {
 	char	*cp;
 
@@ -131,6 +134,7 @@ int okname(char *str)
 	}
 	return ( cp != str );	/* no empty strings, either */
 }
+
 /*
  * step through args.  REPLACE any arg with leading $ with the
  * value for that variable or "" if no match.

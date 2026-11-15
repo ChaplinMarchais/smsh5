@@ -1,0 +1,37 @@
+Student: Chaplin Marchais
+Date   : 11/14/26
+Project: SMSH Project 5
+
+Summary:
+    This project contains smsh, a small interactive command shell. Build it
+    with make and start it with ./smsh; it displays the > prompt, reads one
+    command per line, and runs external programs using fork, execvp, and wait.
+
+    Built-in commands and variable support include:
+         NAME=value stores a shell variable; set lists stored variables
+         export NAME adds a variable to child-process environments
+         cd PATH changes the shell's working directory
+         $NAME substitutes a variable when it is a complete argument
+
+    The shell supports a simple if command, followed by then, a conditional
+    command block, and fi. Commands are split on spaces and tabs; quoting,
+    pipelines, and input/output redirection are not implemented.
+
+Files:
+    smsh.c        -- main loop, prompt, initialization, and signal setup
+    process.c     -- command dispatch and external program execution
+    process.h     -- command processing function declarations
+    builtin.c     -- built-in commands, assignments, and variable substitution
+    builtin.h     -- built-in command function declarations
+    controlflow.c -- handling of if, then, fi, and conditional execution
+    controlflow.h -- control-flow function declarations
+    varlib.c      -- shell variable storage and environment management
+    varlib.h      -- variable library function declarations
+    splitline2.c  -- command-line reading, tokenization, and argument cleanup
+    splitline2.h  -- command parsing function declarations
+    flexstr2.c    -- dynamically growing string and string-list helpers
+    flexstr2.h    -- flexible string and list structures and declarations
+    smsh.h        -- shared shell declarations
+    Makefile      -- builds smsh from the shell source files; make clean removes
+                     object files and the executable
+    Plan          -- design document for the project

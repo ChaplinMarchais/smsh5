@@ -8,15 +8,6 @@
 #include	"varlib.h"
 #include	"process.h"
 
-/**
- **	small-shell version 5
- **		first really useful version after prompting shell
- **		this one parses the command line into strings
- **		uses fork, exec, wait, and ignores signals
- **
- **     hist: 2017-04-12: changed comment to say "version 5"
- **/
-
 #define	DFL_PROMPT	"> "
 
 /**
@@ -26,14 +17,25 @@ int result = 0;
 
 void	setup();
 
-int main()
+int main(int ac, char **av)
 {
+	FILE *source = stdin;
 	char	*cmdline, *prompt, **arglist;
 
-	prompt = DFL_PROMPT ;
+	prompt = DFL_PROMPT;
 	setup();
 
-	while ( (cmdline = next_cmd(prompt, stdin)) != NULL )
+	/* check if a script file is provided as an argument */
+	if (ac > 1) {
+		prompt = "";
+		source = fopen(av[1], "r");
+		if (!source) {
+			perror(av[1]);
+			exit(1);
+		}
+	}
+
+	while ( (cmdline = next_cmd(prompt, source)) != NULL )
 	{
 		if ( (arglist = splitline(cmdline)) != NULL  )
 		{
@@ -42,6 +44,12 @@ int main()
 		}
 		free(cmdline);
 	}
+
+	/* close the source file if it is not stdin */
+	if (source != stdin) {
+		fclose(source);
+	}
+
 	return result;
 }
 

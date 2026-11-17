@@ -8,6 +8,7 @@ int is_cd(char **args, int *resultp);
 int is_exit(char **args);
 int is_read(char **args, int *resultp);
 int do_read(char **args, int *resultp);
+int is_comment(char *cmd);
 void do_exit(char **args);
 void varsub(char **args);
 int assign(char *);

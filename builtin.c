@@ -30,6 +30,8 @@ int is_builtin(char **args, int *resultp)
 		return 1;
 	if ( is_read(args, resultp) )			/* read VAR */
 		return 1;
+	if ( is_comment(args[0]) )				/* # comment */
+		return 1;
 	return 0;
 }
 
@@ -182,8 +184,17 @@ int do_read(char **args, int *resultp)
 		*resultp = VLstore(args[1], buf);
 		return *resultp;
 	}
-	
+
 	return *resultp = -1;
+}
+
+/*
+ * purpose: check if a command is a comment
+ * returns: 1 if it is a comment, 0 otherwise
+ */
+int is_comment(char *cmd)
+{
+	return (cmd[0] == '#');
 }
 
 /*
@@ -203,10 +214,9 @@ int okname(char *str)
 	return ( cp != str );	/* no empty strings, either */
 }
 
-/*
- * step through args.  REPLACE any arg with leading $ with the
- * value for that variable or "" if no match.
- * note: this is *** NOT *** how regular sh works
+/* 
+ * purpose: substitute variable values for arguments starting with $
+ *          and remove comments starting with #
  */
 void varsub(char **args)
 {
@@ -214,11 +224,16 @@ void varsub(char **args)
 	char	*newstr;
 
 	for ( i = 0 ; args[i] != NULL ; i++ )
-		if ( args[i][0] == '$' ){
+		if ( args[i][0] == '$' ){ /* variable substitution */
 			newstr = VLlookup( args[i]+1 );
 			if ( newstr == NULL )
 				newstr = "";
 			free(args[i]);
 			args[i] = strdup(newstr);
+		} else if (i != 0 && args[i][0] == '#') { /* comment*/
+			/* free the comment argument and terminate the argument list */
+			free(args[i]);
+			args[i] = NULL;
+			break;
 		}
 }

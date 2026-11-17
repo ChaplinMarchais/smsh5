@@ -19,12 +19,16 @@
 
 #define	DFL_PROMPT	"> "
 
+/**
+ * global variable to store the result of the last command
+ */
+int result = 0;
+
 void	setup();
 
 int main()
 {
 	char	*cmdline, *prompt, **arglist;
-	int	result;
 
 	prompt = DFL_PROMPT ;
 	setup();

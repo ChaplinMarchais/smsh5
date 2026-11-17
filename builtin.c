@@ -26,11 +26,13 @@ int is_builtin(char **args, int *resultp)
 		return 1;
 	if ( is_cd(args, resultp) )				/* cd PATH */
 		return 1;
+	if ( is_exit(args, resultp) )			/* exit */
+		return 1;
 	return 0;
 }
 
 /* checks if a legal assignment cmd
- * if so, does it and retns 1
+ * if so, does it and returns 1
  * else return 0
  */
 int is_assign_var(char *cmd, int *resultp)
@@ -62,6 +64,18 @@ int is_cd(char **args, int *resultp)
 {
 	if ( strcmp(args[0], "cd") == 0 ){
 		*resultp = cd(args);
+		return 1;
+	}
+	return 0;
+}
+
+/*
+ * checks if command is "exit" : if so, exit
+ */
+int is_exit(char **args, int *resultp)
+{
+	if ( strcmp(args[0], "exit") == 0 ){
+		do_exit(args);
 		return 1;
 	}
 	return 0;
@@ -109,6 +123,8 @@ int assign(char *str)
  */
 int cd(char **args)
 {
+	if ( args[1] == NULL ) /* no argument */
+		return chdir(getenv("HOME"));
 	if ( args[2] ) /* too many arguments */
 	{
 		fprintf(stderr, "cd: too many arguments\n");
@@ -116,6 +132,18 @@ int cd(char **args)
 	}
 
 	return chdir(args[1]);
+}
+
+/*
+ * purpose: exit the shell with the given status or the last result
+ */
+void do_exit(char **args)
+{
+	if ( args[1] != NULL ){
+		exit(atoi(args[1]));
+	}
+
+	exit(result);
 }
 
 /*

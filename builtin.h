@@ -5,6 +5,8 @@ int is_builtin(char **args, int *resultp);
 int is_assign_var(char *cmd, int *resultp);
 int is_list_vars(char *cmd, int *resultp);
 int is_cd(char **args, int *resultp);
+int is_exit(char **args, int *resultp);
+void do_exit(char **args);
 void varsub(char **args);
 int assign(char *);
 int cd(char **);

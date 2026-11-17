@@ -22,12 +22,28 @@ int is_builtin(char **args, int *resultp)
 		return 1;
 	if ( is_list_vars(args[0], resultp) )	/* set   ?  */
 		return 1;
-	if ( is_export(args, resultp) )		/* export X */
+	if ( is_export(args, resultp) )			/* export X */
 		return 1;
 	if ( is_cd(args, resultp) )				/* cd PATH */
 		return 1;
-	if ( is_exit(args, resultp) )			/* exit */
+	if ( is_exit(args) )					/* exit */
 		return 1;
+	if ( is_read(args, resultp) )			/* read VAR */
+		return 1;
+	return 0;
+}
+
+/*
+ * checks if command is "read" : if so, read variable
+ * returns: 1 if command is "read", 0 otherwise
+ */
+int is_read(char **args, int *resultp)
+{
+	if ( strcmp(args[0], "read") == 0 ){
+		*resultp = do_read(args, resultp);
+		if ( *resultp == 0 )
+			return 1;
+	}
 	return 0;
 }
 
@@ -72,7 +88,7 @@ int is_cd(char **args, int *resultp)
 /*
  * checks if command is "exit" : if so, exit
  */
-int is_exit(char **args, int *resultp)
+int is_exit(char **args)
 {
 	if ( strcmp(args[0], "exit") == 0 ){
 		do_exit(args);
@@ -144,6 +160,30 @@ void do_exit(char **args)
 	}
 
 	exit(result);
+}
+
+/*
+ * purpose: read a value for a variable from standard input
+ * returns: 0 on success, -1 on failure
+ */
+int do_read(char **args, int *resultp)
+{
+	/* check for missing variable name */
+	if ( args[1] == NULL ){
+		fprintf(stderr, "read: missing variable name\n");
+		return *resultp = -1;
+	}
+
+	char buf[512];
+	
+	/* read a line from stdin */
+	if ( fgets(buf, sizeof(buf), stdin) != NULL ){
+		buf[strcspn(buf, "\n")] = '\0';  	/* remove newline */
+		*resultp = VLstore(args[1], buf);
+		return *resultp;
+	}
+	
+	return *resultp = -1;
 }
 
 /*

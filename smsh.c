@@ -16,13 +16,13 @@
 int result = 0;
 
 void	setup();
+void	do_smsh(char *prompt, FILE *source);
 
 int main(int ac, char **av)
 {
 	FILE *source = stdin;
-	char	*cmdline, *prompt, **arglist;
-
-	prompt = DFL_PROMPT;
+	char *prompt = DFL_PROMPT;
+	
 	setup();
 
 	/* check if a script file is provided as an argument */
@@ -35,15 +35,7 @@ int main(int ac, char **av)
 		}
 	}
 
-	while ( (cmdline = next_cmd(prompt, source)) != NULL )
-	{
-		if ( (arglist = splitline(cmdline)) != NULL  )
-		{
-			result = process(arglist);
-			freelist(arglist);
-		}
-		free(cmdline);
-	}
+	do_smsh(prompt, source);
 
 	/* close the source file if it is not stdin */
 	if (source != stdin) {
@@ -53,11 +45,11 @@ int main(int ac, char **av)
 	return result;
 }
 
-void setup()
 /*
  * purpose: initialize shell
  * returns: nothing. calls fatal() if trouble
  */
+void setup()
 {
 	extern char **environ;
 
@@ -68,8 +60,28 @@ void setup()
 		fatal("Cannot ignore sigint and/or sigquit", "", 2);
 }
 
+/**
+ * purpose: main loop of the shell
+ * returns: nothing
+ */
+void do_smsh(char *prompt, FILE *source)
+{
+	char *cmdline, **arglist;
+
+	while ( (cmdline = next_cmd(prompt, source)) != NULL )
+	{
+		if ( (arglist = splitline(cmdline)) != NULL  )
+		{
+			result = process(arglist);
+			freelist(arglist);
+		}
+		free(cmdline);
+	}
+}
+
 void fatal(char *s1, char *s2, int n)
 {
 	fprintf(stderr,"Error: %s,%s\n", s1, s2);
 	exit(n);
 }
+

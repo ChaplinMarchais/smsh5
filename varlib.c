@@ -36,6 +36,7 @@
 struct var {
 		char *str;		/* name=val string	*/
 		int  is_env;		/* a boolean		*/
+		int  is_script_var; /* indicates a private script var */
 	};
 
 static struct var tab[MAXVARS];			/* the table	*/
@@ -53,6 +54,7 @@ void VLinit()
 	for ( i = 0 ; i < MAXVARS ; i++ ){
 		tab[i].str = NULL;
 		tab[i].is_env = 0;
+		tab[i].is_script_var = 0;
 	}
 }
 
@@ -80,6 +82,24 @@ int VLstore( char *name, char *val )
 			rv = 0;				/* ok! */
 		}
 	}
+	return rv;
+}
+
+/*
+ * purpose: store a script variable
+ * returns: 1 if trouble, 0 if ok
+ */
+int VLstoreScriptVar( char *name, char *val )
+{
+	int rv = VLstore(name, val);
+
+	/* if storing was successful, mark it as a script variable */
+	if ( rv == 0 ) {
+		struct var *itemp = find_item(name, 0);
+		if ( itemp != NULL )
+			itemp->is_script_var = 1;
+	}
+
 	return rv;
 }
 
@@ -173,7 +193,9 @@ void VLlist()
 	int	i;
 	for(i = 0 ; i<MAXVARS && tab[i].str != NULL ; i++ )
 	{
-		if ( tab[i].is_env )
+		if ( tab[i].is_script_var ) /* do not print script vars */
+			continue;
+		else if ( tab[i].is_env )
 			printf("  * %s\n", tab[i].str);
 		else
 			printf("    %s\n", tab[i].str);

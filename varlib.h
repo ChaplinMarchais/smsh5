@@ -8,6 +8,7 @@ int	VLexport(char *);
 char	*VLlookup(char *);
 void	VLlist();
 int	VLstore( char *, char * );
+int VLstoreScriptVar(char *, char *);
 char	**VLtable2environ();
 int	VLenviron2table(char **);
 

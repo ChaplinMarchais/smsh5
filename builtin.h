@@ -15,5 +15,6 @@ int assign(char *);
 int cd(char **);
 int okname(char *);
 int is_export(char **, int *);
+void insert_var(char *target, char *varNameStart, int var_length);
 
 #endif

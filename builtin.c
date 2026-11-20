@@ -214,6 +214,48 @@ int okname(char *str)
 	return ( cp != str );	/* no empty strings, either */
 }
 
+/*
+ * purpose: remove a character at a given position in a string
+ * args:
+ *   pos - pointer to the character to remove
+ */
+void remove_char_at(char *pos)
+{
+	/* shift the rest of the string left by one character */
+	memmove(pos, pos + 1, strlen(pos));
+}
+
+/*
+ * purpose: process an argument to identify variable references and their 
+ *          positions
+ * args:
+ *   arg - the argument string to process
+ *   varNameStart - pointer to the start of the variable name (output)
+ *   is_var - flag indicating if a variable was found (output)
+ *   var_length - length of the variable name (output)
+ */
+void process_argument(char *arg, char **varNameStart, int *is_var, 
+						int *var_length)
+{
+	char *cp;
+
+	for (cp = arg; *cp; cp++)
+	{
+		if (*cp == '\\') {   /* handle escaped character */
+			remove_char_at(cp);
+			continue;
+		}else if (*cp == '$' && *(cp - 1) != '\\') {
+			*is_var = 1; /* var has been found */
+			*varNameStart = cp + 1; /* start of variable name */
+		} else if (*is_var) {
+			if (isalnum(*cp) || *cp == '_') {
+				(*var_length)++;
+			} else 
+				break; /* exit the loop after replacing the variable */
+		}
+	}
+}
+
 /* 
  * purpose: substitute variable values for arguments starting with $
  *          and remove comments starting with #
@@ -221,19 +263,59 @@ int okname(char *str)
 void varsub(char **args)
 {
 	int	i;
-	char	*newstr;
 
 	for ( i = 0 ; args[i] != NULL ; i++ )
-		if ( args[i][0] == '$' ){ /* variable substitution */
-			newstr = VLlookup( args[i]+1 );
-			if ( newstr == NULL )
-				newstr = "";
-			free(args[i]);
-			args[i] = strdup(newstr);
-		} else if (i != 0 && args[i][0] == '#') { /* comment*/
+	{
+		if (i != 0 && args[i][0] == '#') { /* handle comments */
 			/* free the comment argument and terminate the argument list */
 			free(args[i]);
 			args[i] = NULL;
 			break;
+		} else {
+			char *varNameStart = NULL;
+			int is_var = 0, var_length = 0;
+
+			/* process the argument to handle variable substitution and 
+		       escaped chars */
+			process_argument(args[i], &varNameStart, &is_var, &var_length);
+
+			if (is_var) {
+				insert_var(args[i], varNameStart, var_length);
+			}
 		}
+	}
+}
+
+/*
+ * purpose: insert the value of a variable into a target string
+ * args:
+ *   target - the original string containing the variable
+ *   varNameStart - pointer to the start of the variable name
+ *   var_length - length of the variable name
+ */
+void insert_var(char *target, char *varNameStart, int var_length)
+{
+	char *newstr;
+	char *varNameEnd = varNameStart + var_length;
+
+	/* extract the variable name */
+	char varName[var_length + 1];
+	strncpy(varName, varNameStart, var_length);
+	varName[var_length] = '\0';
+
+	/* look up the value of the variable */
+	newstr = VLlookup(varName);
+	if (newstr == NULL)
+		newstr = "";
+
+	/* replace the variable in the original string */
+	*(varNameStart - 1) = '\0';
+	char *tmp = malloc(strlen(target) + strlen(newstr) 
+						+ strlen(varNameEnd) + 1);
+	sprintf(tmp, "%s%s%s", target, newstr, varNameEnd);
+
+	/* copy the new string back to the target */
+	free(target);
+	target = strdup(tmp);
+	free(tmp);
 }

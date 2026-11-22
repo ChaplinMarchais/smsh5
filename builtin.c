@@ -226,6 +226,33 @@ void remove_char_at(char *pos)
 }
 
 /*
+ * purpose: check if a variable is a special variable ($$ or $?) if a special
+			var is found replace it with its value
+ * args:
+ *   arg - the argument string containing the variable
+ *   cp - pointer to the '$' character in the argument string
+ * returns: 1 if it is a special variable, 0 otherwise
+ */
+int is_special_var(char *arg, char *cp)
+{
+	char sp[32];
+
+	switch (cp[1]) { /* check the character after $ */
+		case '$':
+			pid_t pid = getpid();
+			snprintf(sp, 32, "%d", pid);
+			splice_str(arg, sp, cp, 2);
+			return 1;
+		case '?':
+			snprintf(sp, 32, "%d", result);
+			splice_str(arg, sp, cp, 2);
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+/*
  * purpose: process an argument to identify variable references and their 
  *          positions
  * args:
@@ -244,10 +271,15 @@ void process_argument(char *arg, char **varNameStart, int *is_var,
 		if (*cp == '\\') {   /* handle escaped character */
 			remove_char_at(cp);
 			continue;
-		}else if (*cp == '$' && *(cp - 1) != '\\') {
-			*is_var = 1; /* var has been found */
+		} else if (*cp == '$') { /* var has been found */
+			if (is_special_var(arg, cp)) /* $$ and $? */
+			{
+				cp++;
+				continue; /* skip special variable */
+			}
+			*is_var = 1;
 			*varNameStart = cp + 1; /* start of variable name */
-		} else if (*is_var) {
+		} else if (*is_var) {					/* processing variable name */
 			if (isalnum(*cp) || *cp == '_') {
 				(*var_length)++;
 			} else 
@@ -296,7 +328,6 @@ void varsub(char **args)
 void insert_var(char *target, char *varNameStart, int var_length)
 {
 	char *newstr;
-	char *varNameEnd = varNameStart + var_length;
 
 	/* extract the variable name */
 	char varName[var_length + 1];
@@ -308,11 +339,27 @@ void insert_var(char *target, char *varNameStart, int var_length)
 	if (newstr == NULL)
 		newstr = "";
 
+	/* splice the variable value into the target string account for the $ sign*/
+	splice_str(target, newstr, varNameStart - 1, var_length + 1);
+}
+
+/*
+ * purpose: splice a string into the target at the specified position
+ * args:
+ *   target - the original string
+ *   strToInsert - the string to insert
+ *   splicePos - the position in the target to splice at
+ *   spliceLength - the length of the portion to replace
+ */
+void splice_str(char *target, char *strToInsert, char *splicePos, 
+				int spliceLength)
+{
+	char *varNameEnd = splicePos + spliceLength;
 	/* replace the variable in the original string */
-	*(varNameStart - 1) = '\0';
-	char *tmp = malloc(strlen(target) + strlen(newstr) 
+	*splicePos = '\0';
+	char *tmp = malloc(strlen(target) + strlen(strToInsert) 
 						+ strlen(varNameEnd) + 1);
-	sprintf(tmp, "%s%s%s", target, newstr, varNameEnd);
+	sprintf(tmp, "%s%s%s", target, strToInsert, varNameEnd);
 
 	/* copy the new string back to the target */
 	free(target);

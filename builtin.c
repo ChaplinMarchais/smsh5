@@ -241,11 +241,11 @@ int is_special_var(char *arg, char *cp)
 		case '$':
 			pid_t pid = getpid();
 			snprintf(sp, 32, "%d", pid);
-			splice_str(arg, sp, cp, 2);
+			splice_str(&arg, sp, cp, 2);
 			return 1;
 		case '?':
 			snprintf(sp, 32, "%d", result);
-			splice_str(arg, sp, cp, 2);
+			splice_str(&arg, sp, cp, 2);
 			return 1;
 		default:
 			return 0;
@@ -312,7 +312,7 @@ void varsub(char **args)
 			process_argument(args[i], &varNameStart, &is_var, &var_length);
 
 			if (is_var) {
-				insert_var(args[i], varNameStart, var_length);
+				insert_var(&args[i], varNameStart, var_length);
 			}
 		}
 	}
@@ -325,7 +325,7 @@ void varsub(char **args)
  *   varNameStart - pointer to the start of the variable name
  *   var_length - length of the variable name
  */
-void insert_var(char *target, char *varNameStart, int var_length)
+void insert_var(char **target, char *varNameStart, int var_length)
 {
 	char *newstr;
 
@@ -351,18 +351,18 @@ void insert_var(char *target, char *varNameStart, int var_length)
  *   splicePos - the position in the target to splice at
  *   spliceLength - the length of the portion to replace
  */
-void splice_str(char *target, char *strToInsert, char *splicePos, 
+void splice_str(char **target, char *strToInsert, char *splicePos, 
 				int spliceLength)
 {
 	char *varNameEnd = splicePos + spliceLength;
 	/* replace the variable in the original string */
 	*splicePos = '\0';
-	char *tmp = malloc(strlen(target) + strlen(strToInsert) 
+	char *tmp = malloc(strlen(*target) + strlen(strToInsert) 
 						+ strlen(varNameEnd) + 1);
-	sprintf(tmp, "%s%s%s", target, strToInsert, varNameEnd);
+	sprintf(tmp, "%s%s%s", *target, strToInsert, varNameEnd);
 
 	/* copy the new string back to the target */
-	free(target);
-	target = strdup(tmp);
+	free(*target);
+	*target = strdup(tmp);
 	free(tmp);
 }

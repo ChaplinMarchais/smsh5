@@ -15,8 +15,8 @@ int assign(char *);
 int cd(char **);
 int okname(char *);
 int is_export(char **, int *);
-void insert_var(char *target, char *varNameStart, int var_length);
-void splice_str(char *target, char *strToInsert, char *splicePos, int spliceLength);
+void insert_var(char **target, char *varNameStart, int var_length);
+void splice_str(char **target, char *strToInsert, char *splicePos, int spliceLength);
 
 
 #endif

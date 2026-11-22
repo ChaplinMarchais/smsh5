@@ -1,0 +1,121 @@
+Project: smsh
+
+Purpose: A small command interpreter that reads commands interactively
+         or from a script and runs built-in and external commands.
+
+Outline:
+	smsh displays a prompt and reads one command line at a time. It
+        splits each line into whitespace-delimited arguments, processes
+        variable and inline-command substitutions, and dispatches the
+        command. Built-ins manage shell state; other commands run in a
+        child process. The shell also supports basic if/then/else/fi
+        conditional blocks, script files, and a -c command mode.
+
+Output:
+	Interactive input is preceded by the > prompt. Script and -c input
+        do not display a prompt. Built-ins and external programs write
+        their output to the shell's standard output and standard error.
+        The set command lists stored variables, marking exported values.
+        Inline command substitution captures command output and inserts
+        it into the command line, replacing newlines with spaces.
+
+Arguments:
+	smsh accepts no arguments for interactive use. With -c, it reads
+        the command assembled from the remaining arguments. Otherwise,
+        the first argument is treated as a script file; later arguments
+        are made available to the script as positional variables named
+        1, 2, and so on. The shell supports the built-ins set, export,
+        cd, exit, and read, as well as NAME=value assignments. export
+        marks a variable for inclusion in the environment of child
+        processes. cd changes the shell's working directory; exit uses
+        an optional numeric status or the last command result.
+
+Input:
+        Commands are read one line at a time from standard input, a
+        script file, or the temporary command stream used by -c. Lines
+        are split on spaces and tabs. The shell recognizes $NAME, $$,
+        and $? substitutions, backslash escapes, comments beginning
+        with an unescaped #, and inline commands written as $(command).
+        Quoting, pipelines, and input/output redirection are not
+        implemented by the shell.
+
+Data Structures:
+        FLEXSTR:  a dynamically growing character buffer used to read
+                  command lines.
+        FLEXLIST: a dynamically growing list of separately allocated
+                  argument strings, returned as a NULL-terminated argv.
+        struct var: stores a name=value string, whether it is exported,
+                    and whether it is a private script variable. The
+                    variable table has a fixed capacity of 200 entries.
+        Control-flow state: static state records whether an if command
+                            is awaiting then or executing a then/else
+                            block, and stores the condition result.
+
+Memory Usage:
+	Command lines, argument lists, substitution results, and flexible
+        strings are dynamically allocated and released after use.
+        Variable values are stored in the fixed-size variable table;
+        replacing a value frees its previous string. Child processes
+        receive a separately allocated environment pointer array, while
+        the strings it references remain owned by the variable table.
+
+Program Structure/Layering:
+        main
+        |-- setup                      [load environment; set signals]
+        |-- setup_env                  [interactive, -c, or script input]
+        `-- do_smsh
+            |-- next_cmd               [read a command line]
+            `-- splitline
+                |-- varsub             [variables, escapes, comments]
+                |-- execute_inline_commands
+                |   `-- execute_inline_command
+                |       `-- execute   [capture command output]
+                `-- process
+                    |-- do_control_command  [if, then, else, fi]
+                    |   `-- process        [run the if condition]
+                    `-- do_command          [when execution is allowed]
+                        |-- is_builtin
+                        |   |-- assignments, set, export, cd, exit, read
+                        |   `-- variable helpers in varlib.c
+                        `-- execute         [fork, build environment,
+                                             execvp, and wait]
+
+Source Files:
+	smsh.c:       initializes the shell, selects input mode, and runs
+                      the command loop
+        process.c:    dispatches control-flow commands and commands;
+                      starts external programs and captures inline output
+        process.h:    declarations for command-processing functions
+        builtin.c:    implements built-in commands, assignments, comments,
+                      variable substitution, and inline-command parsing
+        builtin.h:    declarations for built-in and substitution functions
+        controlflow.c: tracks and processes if, then, else, and fi state
+        controlflow.h: declarations for control-flow functions
+        varlib.c:     stores shell variables and builds child environments
+        varlib.h:     declarations for variable-table functions
+        splitline2.c: reads command lines, tokenizes arguments, and frees lists
+        splitline2.h: declarations for command-reading and parsing functions
+        flexstr2.c:   dynamically growing string and string-list helpers
+        flexstr2.h:   flexible string/list structures and declarations
+        smsh.h:       shared shell declarations
+        Makefile:     builds smsh; make clean removes objects and executable
+
+Files:
+        The shell reads a script file when one is supplied. In -c mode,
+        it writes the command arguments to a temporary stream before
+        processing them. Inline command substitution creates and unlinks
+        a temporary file to capture command output. Other file access is
+        performed by commands started by the shell, not by the shell's
+        command parser.
+
+Error Handling:
+	Failure to open a script or create a temporary stream is reported
+        and causes the shell to exit. Allocation failures in the string
+        and list helpers are reported through fatal. A failed fork, wait,
+        or exec is reported by the command-execution layer. Built-ins
+        return failure for invalid or missing arguments and failed
+        operations; conditional syntax errors are reported and reset the
+        control-flow state. The shell stores the most recent processing
+        result for use by $? and exit.
+
+

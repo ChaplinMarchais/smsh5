@@ -3,8 +3,7 @@
 #include	<unistd.h>
 #include	<signal.h>
 #include	<sys/wait.h>
-#include	"smsh.h"
-#include	"builtin.h"
+#include	<string.h>
 #include	"varlib.h"
 #include	"controlflow.h"
 #include	"process.h"
@@ -53,17 +52,15 @@ int process(char *args[])
  */
 int do_command(char **args)
 {
-	void varsub(char **);
 	int  is_builtin(char **, int *);
 	int  rv;
 
-	varsub(args);				/* move this earlier	*/
 	if ( !is_builtin(args, &rv) )		/* if not done by shell	*/
-		rv = execute(args);		/* fork and exec it	*/
+		rv = execute(args, STDOUT_FILENO);		/* fork and exec it	*/
 	return rv;				/* return exit status	*/
 }
 
-int execute(char *argv[])
+int execute(char *argv[], int output_fd)
 /*
  * purpose: run a program passing it arguments
  * returns: status returned via wait, or -1 on error
@@ -88,6 +85,10 @@ int execute(char *argv[])
 		environ = VLtable2environ();
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
+
+		if(output_fd != STDOUT_FILENO) /* redirect output if needed */
+			dup2(output_fd, STDOUT_FILENO);
+
 		execvp(argv[0], argv);
 		perror("cannot execute command");
 		free(environ);		/* see comment for VLtable2environ	*/
@@ -98,4 +99,42 @@ int execute(char *argv[])
 			perror("wait");
 	}
 	return child_info;
+}
+
+/*
+ * purpose: execute a command inline and capture its output
+ * returns: output of the command as a string, or NULL on error
+ *    note: caller is responsible for freeing the returned string
+ */
+char *execute_inline_command(char **argv)
+{
+	char output[1024];
+	char template[] = "/tmp/smshXXXXXX";
+
+	/* create a temporary file to capture the command output */
+	int tmp_fd = mkstemp(template);
+	if (tmp_fd == -1) {
+		perror("mkstemp");
+		return NULL;
+	}
+
+	unlink(template); /* remove the temporary file on close*/
+
+	if (argv != NULL)
+		execute(argv, tmp_fd); /* execute the command and capture output */
+
+	lseek(tmp_fd, 0, SEEK_SET);
+	int n = read(tmp_fd, output, sizeof(output) - 1); /* read command output */
+	if (n >= 0)
+		output[n] = '\0'; 
+	else 
+		output[0] = '\0';
+
+	close(tmp_fd); /* close the temporary file */
+
+	for (char *p = output; *p; p++) /* replace newlines with spaces */
+		if (*p == '\n')
+			*p = ' ';
+	
+	return strdup(output);
 }

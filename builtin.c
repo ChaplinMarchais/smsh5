@@ -10,6 +10,8 @@
 #include	"smsh.h"
 #include	"varlib.h"
 #include	"builtin.h"
+#include	"process.h"
+#include	"splitline2.h"
 
 int is_builtin(char **args, int *resultp)
 /*
@@ -271,7 +273,8 @@ void process_argument(char *arg, char **varNameStart, int *is_var,
 		if (*cp == '\\') {   /* handle escaped character */
 			remove_char_at(cp);
 			continue;
-		} else if (*cp == '$') { /* var has been found */
+		} else if (*cp == '$' && !*is_var && *(cp+1) != '(') { 
+			/* var has been found */
 			if (is_special_var(arg, cp)) /* $$ and $? */
 			{
 				cp++;
@@ -288,20 +291,19 @@ void process_argument(char *arg, char **varNameStart, int *is_var,
 	}
 }
 
-/* 
+/*
  * purpose: substitute variable values for arguments starting with $
  *          and remove comments starting with #
  */
-void varsub(char **args)
+void varsub(char *line)
 {
-	int	i;
+	char *cp;
 
-	for ( i = 0 ; args[i] != NULL ; i++ )
+	for (cp = line; *cp; cp++)
 	{
-		if (i != 0 && args[i][0] == '#') { /* handle comments */
-			/* free the comment argument and terminate the argument list */
-			free(args[i]);
-			args[i] = NULL;
+		if (cp != line && *cp == '#' && *(cp-1) != '\\') { /* handle comments */
+			/* terminate the line at the comment character */
+			*cp = '\0';
 			break;
 		} else {
 			char *varNameStart = NULL;
@@ -309,10 +311,13 @@ void varsub(char **args)
 
 			/* process the argument to handle variable substitution and 
 		       escaped chars */
-			process_argument(args[i], &varNameStart, &is_var, &var_length);
+			process_argument(cp, &varNameStart, &is_var, &var_length);
 
 			if (is_var) {
-				insert_var(&args[i], varNameStart, var_length);
+				insert_var(&line, varNameStart, var_length);
+				cp += var_length;
+				is_var = 0;
+				varNameStart = NULL;
 			}
 		}
 	}
@@ -365,4 +370,45 @@ void splice_str(char **target, char *strToInsert, char *splicePos,
 	free(*target);
 	*target = strdup(tmp);
 	free(tmp);
+}
+
+/*
+ * purpose: execute inline commands of the form $(command) within a line
+ * args:
+ *   line - pointer to the line containing inline commands
+ * note: modifies the line in place, replacing inline commands with their output
+ */
+void execute_inline_commands(char **line)
+{
+	size_t pos = 0;
+	while ((*line)[pos] != '\0')
+	{
+		char *cp = *line + pos;
+		if (*cp == '$' && *(cp+1) == '(') 
+		{
+			/* find the closing parenthesis */
+			char *start = cp + 2; /* skip $ and ( */
+			char *end = strchr(start, ')');
+
+			if (end) {
+				/* execute the command and replace it with its output */
+				int length = end - start;
+
+				char command[length + 1];
+				strncpy(command, start, length);
+				command[length] = '\0';
+				
+				char **argv = splitline(command);
+				char *output = execute_inline_command(argv);
+				freelist(argv);
+
+				/* replace the inline command with its output */
+				splice_str(line, output, cp, length + 3);/* $() adds 3 chars */
+				pos += strlen(output); /* resume after the inserted output */
+				free(output); /* free the output of the inline command */
+				continue;
+			}
+		}
+		pos++;
+	}
 }

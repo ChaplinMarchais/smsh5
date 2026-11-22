@@ -13,6 +13,7 @@
 #include	"splitline2.h"
 #include	"smsh.h"
 #include	"flexstr2.h"
+#include    "builtin.h"
 
 char * next_cmd(char *prompt, FILE *fp)
 /*
@@ -72,6 +73,13 @@ char ** splitline(char *line)
 	if ( line == NULL )			/* handle special case	*/
 		return NULL;
 
+	/* Substitution may replace the buffer; never free the caller's string. */
+	line = strdup(line);
+	if (line == NULL)
+		fatal("out of memory", "", 1);
+	varsub(line);
+	execute_inline_commands(&line);
+
 	fl_init(&strings,0);
 
 	while( line[i] != '\0' )
@@ -91,6 +99,7 @@ char ** splitline(char *line)
 		free(next_token);				/* fixT */
 	}
 	parts = fl_getlist(&strings);	/* get array of those strings	*/
+	free(line);
 	return parts;
 }
 
